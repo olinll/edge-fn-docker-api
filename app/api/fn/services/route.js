@@ -14,20 +14,20 @@ export async function POST(request) {
             return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
         }
 
-        const { username, password, port, fnId, key } = body;
+        const { username, password, fnId, key, isLocal } = body;
 
         // 全局密钥鉴权
         if (key !== GLOBAL_AUTH_KEY) {
             return NextResponse.json({ success: false, error: 'Unauthorized: Invalid key' }, { status: 401 });
         }
         
-        if (!username || !password || !port || !fnId) {
+        if (!username || !password || !fnId) {
             return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
         }
 
-        const config = { fnId, username, password, port };
+        const config = { fnId, username, password };
 
-        console.log('Connecting to NAS for port:', config.port);
+        console.log('Fetching services list...');
         
         // 1. Get NAS Host
         const nasData = await fetchNasList(config);
@@ -51,25 +51,58 @@ export async function POST(request) {
             await client.connect();
             await client.login(config.username, config.password);
             
-            const tokenRes = await client.sendRequest('appcgi.sac.entry.v1.exchangeEntryToken', {});
-            const entryToken = tokenRes.data.token;
-            
+            // Get all services
             const listRes = await client.sendRequest('appcgi.sac.entry.v1.dockerList', {all: true});
-            const matched = listRes.data?.list?.find(c => Number(c?.uri?.port) === Number(config.port));
-            client.close();
+            const servicesList = listRes.data?.list || [];
 
-            if (matched?.uri?.fnDomain) {
-                const targetUrl = `https://${matched.uri.fnDomain}.${nasHost}`;
+            let resultServices = [];
+            let entryToken = null;
+
+            if (isLocal) {
+                // Local: Return local address + service port
+                const localIp = nasData.ipv4 && nasData.ipv4.length > 0 ? nasData.ipv4[0] : nasHost;
                 
-                // Return result directly
-                return NextResponse.json({ 
-                    success: true, 
-                    token: entryToken, 
-                    url: targetUrl 
-                });
+                resultServices = servicesList.map(s => {
+                    const port = s.uri?.port;
+                    if (!port) return null;
+
+                    return {
+                        title: s.title || s.name,
+                        url: `http://${localIp}:${port}`,
+                        port: port,
+                        alias: (s.title || s.name)+'_'+port
+                    };
+                }).filter(Boolean);
+            } else {
+                // External: Return external URL + entry-token
+                const tokenRes = await client.sendRequest('appcgi.sac.entry.v1.exchangeEntryToken', {});
+                entryToken = tokenRes.data.token;
+
+                resultServices = servicesList.map(s => {
+                    const fnDomain = s.uri?.fnDomain;
+                    if (!fnDomain) return null;
+// console.log('fnDomain:', s);
+                    return {
+                        title: s.title || s.name,
+                        url: `https://${fnDomain}.${nasHost}`,
+                        port: s.uri.port,
+                        alias: (s.title || s.name)+'_'+s.uri.port,
+                    };
+                }).filter(Boolean);
             }
 
-            return NextResponse.json({ success: false, error: 'App not found on port ' + config.port }, { status: 404 });
+            client.close();
+
+            const response = {
+                success: true,
+                services: resultServices
+            };
+
+            if (!isLocal && entryToken) {
+                response.entryToken = entryToken;
+            }
+
+            return NextResponse.json(response);
 
         } catch (connError) {
              console.error('NAS Connection/Login Failed:', connError.message);

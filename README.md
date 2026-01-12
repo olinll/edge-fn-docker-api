@@ -13,7 +13,7 @@
 
 ## 接口文档
 
-### 连接 NAS 服务
+### 1. 连接 NAS 服务 (单个)
 
 *   **URL**: `/api/fn/connect`
 *   **Method**: `POST`
@@ -41,6 +41,71 @@
 }
 ```
 
+### 2. 获取所有服务列表
+
+*   **URL**: `/api/fn/services`
+*   **Method**: `POST`
+*   **Content-Type**: `application/json`
+
+#### 请求参数 (Body)
+
+| 参数名 | 类型 | 必填 | 描述 |
+| :--- | :--- | :--- | :--- |
+| `fnId` | string | 是 | 您的 fnOS ID |
+| `username` | string | 是 | NAS 登录用户名 |
+| `password` | string | 是 | NAS 登录密码 |
+| `key` | string | 是 | API 鉴权密钥 (需与服务器配置一致) |
+| `isLocal` | boolean | 否 | 是否返回本地局域网地址 (默认 false) |
+
+#### 响应示例
+
+**成功 - 外部模式 (`isLocal: false`)**
+
+返回外部访问域名和 entryToken。
+
+```json
+{
+  "success": true,
+  "services": [
+    {
+      "name": "alist",
+      "image": "xhofe/alist:latest",
+      "uri": {
+          "fnDomain": "alist-xxxx",
+          "port": 5244
+      },
+      "url": "https://alist-xxxx.fnos.net"
+    },
+    ...
+  ],
+  "entryToken": "9f531e22575646b5ab5ffa3254e14006"
+}
+```
+
+**成功 - 本地模式 (`isLocal: true`)**
+
+返回本地 IP 和端口地址。
+
+```json
+{
+  "success": true,
+  "services": [
+    {
+      "name": "alist",
+      "image": "xhofe/alist:latest",
+      "uri": {
+          "fnDomain": "alist-xxxx",
+          "port": 5244
+      },
+      "url": "http://192.168.1.10:5244"
+    },
+    ...
+  ]
+}
+```
+
+## 通用错误响应
+
 **鉴权失败 (401 Unauthorized)**
 
 ```json
@@ -50,7 +115,7 @@
 }
 ```
 
-**连接失败 (500 Internal Server Error)**
+**服务器内部错误 (500 Internal Server Error)**
 
 ```json
 {
