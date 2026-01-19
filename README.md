@@ -2,11 +2,12 @@
 
 这是一个基于 Next.js 构建的轻量级 API 服务，用于通过 WebSocket 协议连接到 fnOS NAS，进行身份验证并获取特定 Docker 服务的访问地址。
 
-该服务已剥离所有前端页面，仅提供纯 API 接口，适合集成到其他系统中使用。
+该服务核心功能为纯 API 接口，根路径 `/` 提供了接口文档页面，适合集成到其他系统中使用。
 
 ## 功能特性
 
-*   **API 纯净版**: 仅保留核心连接逻辑，移除所有 UI 组件。
+*   **API 服务**: 仅保留核心连接逻辑，提供标准 REST API。
+*   **内置文档**: 根路径提供可视化的接口使用说明。
 *   **安全鉴权**: 内置全局密钥校验机制，防止未授权访问。
 *   **Docker 服务发现**: 自动发现并匹配 NAS 上指定端口的 Docker 容器。
 *   **WebSocket 协议**: 实现了与 fnOS 的复杂握手与加密通信流程。
@@ -68,13 +69,10 @@
   "success": true,
   "services": [
     {
-      "name": "alist",
-      "image": "xhofe/alist:latest",
-      "uri": {
-          "fnDomain": "alist-xxxx",
-          "port": 5244
-      },
-      "url": "https://alist-xxxx.fnos.net"
+      "title": "alist",
+      "url": "https://alist-xxxx.fnos.net",
+      "port": 5244,
+      "alias": "alist_5244"
     },
     ...
   ],
@@ -91,13 +89,10 @@
   "success": true,
   "services": [
     {
-      "name": "alist",
-      "image": "xhofe/alist:latest",
-      "uri": {
-          "fnDomain": "alist-xxxx",
-          "port": 5244
-      },
-      "url": "http://192.168.1.10:5244"
+      "title": "alist",
+      "url": "http://192.168.1.10:5244",
+      "port": 5244,
+      "alias": "alist_5244"
     },
     ...
   ]
@@ -157,6 +152,6 @@ npm run start
 
 ## 技术栈
 
-*   **框架**: Next.js (App Router)
+*   **框架**: Next.js (App Router), React
 *   **加密**: crypto-js, jsencrypt
 *   **通信**: WebSocket (ws)
