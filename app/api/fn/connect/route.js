@@ -9,9 +9,14 @@ export async function POST(request) {
     try {
         let body = {};
         try {
-            body = await request.json();
+            const bodyText = await request.text();
+            if (!bodyText) {
+                return NextResponse.json({ success: false, error: 'Empty request body' }, { status: 400 });
+            }
+            body = JSON.parse(bodyText);
         } catch (e) {
-            return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
+            console.error('JSON Parse Error:', e);
+            return NextResponse.json({ success: false, error: 'Invalid JSON body: ' + e.message }, { status: 400 });
         }
 
         const { username, password, port, fnId, key } = body;
