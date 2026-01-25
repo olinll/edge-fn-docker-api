@@ -9,7 +9,9 @@ export async function POST(request) {
     try {
         let body = {};
         try {
-            const bodyText = await request.text();
+            // Clone the request in case it has been read already by some middleware
+            const clonedReq = request.clone();
+            const bodyText = await clonedReq.text();
             
             // Debug logs for troubleshooting production issues
             console.log('[API Debug] Request Method:', request.method);
