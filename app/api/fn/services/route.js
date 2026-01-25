@@ -10,8 +10,27 @@ export async function POST(request) {
         let body = {};
         try {
             const bodyText = await request.text();
+            
+            // Debug logs for troubleshooting production issues
+            console.log('[API Debug] Request Method:', request.method);
+            console.log('[API Debug] Content-Type:', request.headers.get('content-type'));
+            console.log('[API Debug] Body Length:', bodyText ? bodyText.length : 0);
+            if (bodyText && bodyText.length < 1000) {
+                console.log('[API Debug] Body Preview:', bodyText);
+            }
+
             if (!bodyText) {
-                return NextResponse.json({ success: false, error: 'Empty request body' }, { status: 400 });
+                return NextResponse.json({ 
+                    success: false, 
+                    error: 'Empty request body',
+                    debug: {
+                        method: request.method,
+                        url: request.url,
+                        contentLength: request.headers.get('content-length'),
+                        contentType: request.headers.get('content-type'),
+                        bodyUsed: request.bodyUsed
+                    }
+                }, { status: 400 });
             }
             body = JSON.parse(bodyText);
         } catch (e) {
