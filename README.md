@@ -51,7 +51,7 @@
 *   **Method**: `GET`
 *   **Description**: 获取 NAS 上运行的所有 Docker 服务列表。
 
-> **注意**: 为兼容 Serverless 环境（如腾讯云 EdgeOne/SCF），本接口采用 GET 请求，所有参数通过 URL Query String 传递。
+> **注意**: 因为傻逼腾讯云（EdgeOne Pages)的BUG，本接口被迫采用 GET 请求，所有参数通过 URL Query String 传递。
 
 #### 请求参数 (URL Query Params)
 

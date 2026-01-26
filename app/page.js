@@ -92,7 +92,20 @@ export default function Home() {
   return (
     <div style={containerStyle}>
       <header style={headerStyle}>
-        <h1 style={h1Style}>Edge Fn Docker API</h1>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+          <img 
+            src="https://q2.qlogo.cn/headimg_dl?dst_uin=9892214&spec=0" 
+            alt="Logo" 
+            style={{ 
+              width: '64px', 
+              height: '64px', 
+              borderRadius: '50%', 
+              marginRight: '20px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' 
+            }} 
+          />
+          <h1 style={{ ...h1Style, marginBottom: 0 }}>Edge Fn Docker API</h1>
+        </div>
         <p style={{ fontSize: '1.1rem', color: '#666' }}>
           一个基于 Next.js 构建的轻量级 API 服务，用于通过 WebSocket 协议连接到 fnOS NAS，进行身份验证并获取特定 Docker 服务的访问地址。
         </p>
