@@ -45,6 +45,16 @@ export async function POST(request) {
                       console.log('[API Debug] Strategy 3 (request.body) success');
                  }
             }
+
+            // Strategy 4: Handle GET request with query params as fallback
+            if ((!body || Object.keys(body).length === 0) && request.method === 'POST') {
+                const url = new URL(request.url);
+                const queryParams = Object.fromEntries(url.searchParams);
+                if (queryParams.fnId && queryParams.username) {
+                    console.log('[API Debug] Strategy 4 (Query Params Fallback) success');
+                    body = queryParams;
+                }
+            }
             
             // Final check
             if (!body || Object.keys(body).length === 0) {
