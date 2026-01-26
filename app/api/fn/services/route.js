@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { FnOsClient, fetchNasList } from '../../../lib/fn-client';
 
+// Force Node.js runtime which is more stable for SCF/EdgeOne than 'edge'
+export const runtime = 'nodejs';
+
 // 全局鉴权密钥，用于 API 调用校验
 // 请修改此处的密钥或设置环境变量 GLOBAL_AUTH_KEY
 const GLOBAL_AUTH_KEY = process.env.GLOBAL_AUTH_KEY || 'sk_random_key_123456';
@@ -14,19 +17,24 @@ export async function POST(request) {
             request.headers.forEach((value, key) => headers[key] = value);
             console.log('[API Debug] Headers:', JSON.stringify(headers));
 
-            // Try reading as JSON directly
-            // request.json() handles the stream reading internally and might be more robust
-            body = await request.json();
+            // Use ArrayBuffer to read raw bytes, then decode to string
+            // This is the most robust way to read body in diverse environments
+            const arrayBuffer = await request.arrayBuffer();
+            const bodyText = new TextDecoder().decode(arrayBuffer);
             
             // Debug logs
             console.log('[API Debug] Request Method:', request.method);
-            console.log('[API Debug] Body keys:', Object.keys(body));
+            console.log('[API Debug] Body Length:', bodyText ? bodyText.length : 0);
+            
+            if (!bodyText) {
+                throw new Error('Empty body text after decode');
+            }
+            
+            body = JSON.parse(bodyText);
             
         } catch (e) {
             console.error('Body Read/Parse Error:', e);
             
-            // Fallback: Check if we can read text if JSON failed (unlikely if stream is consumed, but worth logging)
-            // Or maybe the body was indeed empty/unreadable
             return NextResponse.json({ 
                 success: false, 
                 error: 'Empty or Invalid request body',
