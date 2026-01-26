@@ -17,20 +17,43 @@ export async function POST(request) {
             request.headers.forEach((value, key) => headers[key] = value);
             console.log('[API Debug] Headers:', JSON.stringify(headers));
 
-            // Use ArrayBuffer to read raw bytes, then decode to string
-            // This is the most robust way to read body in diverse environments
-            const arrayBuffer = await request.arrayBuffer();
-            const bodyText = new TextDecoder().decode(arrayBuffer);
+            // Strategy 1: Standard JSON parse
+            try {
+                 const cloned = request.clone();
+                 body = await cloned.json();
+                 console.log('[API Debug] Strategy 1 (json) success');
+            } catch (e1) {
+                console.log('[API Debug] Strategy 1 (json) failed:', e1.message);
+                
+                // Strategy 2: ArrayBuffer
+                try {
+                    const arrayBuffer = await request.arrayBuffer();
+                    const bodyText = new TextDecoder().decode(arrayBuffer);
+                    if (bodyText) {
+                         body = JSON.parse(bodyText);
+                         console.log('[API Debug] Strategy 2 (ArrayBuffer) success, length:', bodyText.length);
+                    }
+                } catch (e2) {
+                     console.log('[API Debug] Strategy 2 (ArrayBuffer) failed:', e2.message);
+                }
+            }
+
+            // Strategy 3: Check if body is already parsed (unlikely in App Router but possible in some adapters)
+            if (!body || Object.keys(body).length === 0) {
+                 if (request.body && typeof request.body === 'object' && !request.body.getReader) {
+                      body = request.body;
+                      console.log('[API Debug] Strategy 3 (request.body) success');
+                 }
+            }
+            
+            // Final check
+            if (!body || Object.keys(body).length === 0) {
+                throw new Error('All parsing strategies failed or body is empty');
+            }
             
             // Debug logs
             console.log('[API Debug] Request Method:', request.method);
-            console.log('[API Debug] Body Length:', bodyText ? bodyText.length : 0);
-            
-            if (!bodyText) {
-                throw new Error('Empty body text after decode');
-            }
-            
-            body = JSON.parse(bodyText);
+            console.log('[API Debug] Body keys:', Object.keys(body));
             
         } catch (e) {
             console.error('Body Read/Parse Error:', e);
