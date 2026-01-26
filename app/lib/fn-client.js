@@ -331,7 +331,7 @@ function genSign(e, i) {
     return sha256(s);
 }
 
-function genAuthX(url, method, paramsOrData) {
+function genAuthX(url, method, paramsOrData, timestamp = Date.now()) {
     const API_KEY = "zIGtkc3dqZnJpd29qZXJqa2w7c";
     const PREFIX = "NDzZTVxnRKP8Z0jXg1VAMonaG8akvh";
     let o = '';
@@ -344,7 +344,7 @@ function genAuthX(url, method, paramsOrData) {
         o = JSON.stringify(paramsOrData);
     }
     const c = (Math.floor(Math.random() * 900000) + 100000).toString();
-    const d = Date.now();
+    const d = timestamp;
     const g = [PREFIX, url, c, d, md5(o), API_KEY].join("_");
     const sign = md5(g);
     return `nonce=${c}&timestamp=${d}&sign=${sign}`;
@@ -354,14 +354,15 @@ export async function fetchNasList(config) {
     const i = Date.now();
     const bodyData = { fnId: config.fnId };
     const fnSign = genSign(config.fnId, i);
-    const authX = genAuthX('/api/v1/fn/con', 'post', bodyData);
+    const authX = genAuthX('/api/v1/fn/con', 'post', bodyData, i);
 
     const response = await fetch('https://fnos.net/api/v1/fn/con', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'fn-sign': fnSign,
-            'authx': authX
+            'authx': authX,
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
         },
         body: JSON.stringify(bodyData)
     });
@@ -371,5 +372,6 @@ export async function fetchNasList(config) {
         console.log('[API] Got NAS list:', responseData.data);
         return responseData.data;
     }
-    throw new Error('Failed to get NAS list');
+    console.error('[API] Failed to get NAS list. Response:', JSON.stringify(responseData));
+    throw new Error('Failed to get NAS list: ' + (responseData.msg || responseData.message || JSON.stringify(responseData)));
 }
