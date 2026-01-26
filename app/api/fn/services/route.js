@@ -11,73 +11,22 @@ const GLOBAL_AUTH_KEY = process.env.GLOBAL_AUTH_KEY || 'sk_random_key_123456';
 export async function POST(request) {
     try {
         let body = {};
-        try {
-            // Debug: Log all headers
-            const headers = {};
-            request.headers.forEach((value, key) => headers[key] = value);
-            console.log('[API Debug] Headers:', JSON.stringify(headers));
-
-            // Strategy 1: Standard JSON parse
+        
+        // Strategy: Handle GET request with query params as fallback
+        // This is a workaround for empty body issues in some Edge/Serverless environments
+        const url = new URL(request.url);
+        const queryParams = Object.fromEntries(url.searchParams);
+        
+        if (queryParams.fnId && queryParams.username) {
+            body = queryParams;
+        } else {
+             // Try standard JSON parse if query params are missing
             try {
-                 const cloned = request.clone();
-                 body = await cloned.json();
-                 console.log('[API Debug] Strategy 1 (json) success');
-            } catch (e1) {
-                console.log('[API Debug] Strategy 1 (json) failed:', e1.message);
-                
-                // Strategy 2: ArrayBuffer
-                try {
-                    const arrayBuffer = await request.arrayBuffer();
-                    const bodyText = new TextDecoder().decode(arrayBuffer);
-                    if (bodyText) {
-                         body = JSON.parse(bodyText);
-                         console.log('[API Debug] Strategy 2 (ArrayBuffer) success, length:', bodyText.length);
-                    }
-                } catch (e2) {
-                     console.log('[API Debug] Strategy 2 (ArrayBuffer) failed:', e2.message);
-                }
+                 body = await request.json();
+            } catch (e) {
+                // If body parse fails and no query params, we can't proceed
+                 console.error('Body Read/Parse Error:', e);
             }
-
-            // Strategy 3: Check if body is already parsed (unlikely in App Router but possible in some adapters)
-            if (!body || Object.keys(body).length === 0) {
-                 if (request.body && typeof request.body === 'object' && !request.body.getReader) {
-                      body = request.body;
-                      console.log('[API Debug] Strategy 3 (request.body) success');
-                 }
-            }
-
-            // Strategy 4: Handle GET request with query params as fallback
-            if ((!body || Object.keys(body).length === 0) && request.method === 'POST') {
-                const url = new URL(request.url);
-                const queryParams = Object.fromEntries(url.searchParams);
-                if (queryParams.fnId && queryParams.username) {
-                    console.log('[API Debug] Strategy 4 (Query Params Fallback) success');
-                    body = queryParams;
-                }
-            }
-            
-            // Final check
-            if (!body || Object.keys(body).length === 0) {
-                throw new Error('All parsing strategies failed or body is empty');
-            }
-            
-            // Debug logs
-            console.log('[API Debug] Request Method:', request.method);
-            console.log('[API Debug] Body keys:', Object.keys(body));
-            
-        } catch (e) {
-            console.error('Body Read/Parse Error:', e);
-            
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Empty or Invalid request body',
-                debug: {
-                    method: request.method,
-                    url: request.url,
-                    headers: Object.fromEntries(request.headers),
-                    error: e.message
-                }
-            }, { status: 400 });
         }
 
         const { username, password, fnId, key, isLocal } = body;
