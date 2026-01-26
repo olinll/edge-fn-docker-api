@@ -5,19 +5,16 @@ import { FnOsClient, fetchNasList } from '../../../lib/fn-client';
 // 请修改此处的密钥或设置环境变量 GLOBAL_AUTH_KEY
 const GLOBAL_AUTH_KEY = process.env.GLOBAL_AUTH_KEY || 'sk_random_key_123456';
 
-export async function POST(request) {
+async function handler(request) {
     try {
         let body = {};
-        try {
-            const bodyText = await request.text();
-            if (!bodyText) {
-                return NextResponse.json({ success: false, error: 'Empty request body' }, { status: 400 });
-            }
-            body = JSON.parse(bodyText);
-        } catch (e) {
-            console.error('JSON Parse Error:', e);
-            return NextResponse.json({ success: false, error: 'Invalid JSON body: ' + e.message }, { status: 400 });
-        }
+        
+        // Parse parameters from URL query string
+        const url = new URL(request.url);
+        const queryParams = Object.fromEntries(url.searchParams);
+        
+        // Only use query params, ignore body
+        body = queryParams;
 
         const { username, password, port, fnId, key } = body;
 
@@ -86,3 +83,5 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+
+export { handler as GET, handler as POST };

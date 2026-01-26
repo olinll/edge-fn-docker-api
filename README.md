@@ -17,10 +17,10 @@
 ### 1. 连接 NAS 服务 (单个)
 
 *   **URL**: `/api/fn/connect`
-*   **Method**: `POST`
-*   **Content-Type**: `application/json`
+*   **Method**: `GET`
+*   **Description**: 通过 URL 参数传递认证信息，获取指定 Docker 服务的访问地址。
 
-#### 请求参数 (Body)
+#### 请求参数 (URL Query Params)
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :--- | :--- |
@@ -29,6 +29,9 @@
 | `password` | string | 是 | NAS 登录密码 |
 | `port` | number/string | 是 | 目标 Docker 服务的端口号 |
 | `key` | string | 是 | API 鉴权密钥 (需与服务器配置一致) |
+
+**示例 URL:**
+`/api/fn/connect?fnId=xxx&username=admin&password=123456&port=5244&key=sk_123`
 
 #### 响应示例
 
@@ -45,10 +48,12 @@
 ### 2. 获取所有服务列表
 
 *   **URL**: `/api/fn/services`
-*   **Method**: `POST`
-*   **Content-Type**: `application/json`
+*   **Method**: `GET`
+*   **Description**: 获取 NAS 上运行的所有 Docker 服务列表。
 
-#### 请求参数 (Body)
+> **注意**: 为兼容 Serverless 环境（如腾讯云 EdgeOne/SCF），本接口采用 GET 请求，所有参数通过 URL Query String 传递。
+
+#### 请求参数 (URL Query Params)
 
 | 参数名 | 类型 | 必填 | 描述 |
 | :--- | :--- | :--- | :--- |
@@ -57,6 +62,9 @@
 | `password` | string | 是 | NAS 登录密码 |
 | `key` | string | 是 | API 鉴权密钥 (需与服务器配置一致) |
 | `isLocal` | boolean | 否 | 是否返回本地局域网地址 (默认 false) |
+
+**示例 URL:**
+`/api/fn/services?fnId=xxx&username=admin&password=123456&key=sk_123&isLocal=true`
 
 #### 响应示例
 

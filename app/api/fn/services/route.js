@@ -8,26 +8,16 @@ export const runtime = 'nodejs';
 // 请修改此处的密钥或设置环境变量 GLOBAL_AUTH_KEY
 const GLOBAL_AUTH_KEY = process.env.GLOBAL_AUTH_KEY || 'sk_random_key_123456';
 
-export async function POST(request) {
+async function handler(request) {
     try {
         let body = {};
         
-        // Strategy: Handle GET request with query params as fallback
-        // This is a workaround for empty body issues in some Edge/Serverless environments
+        // Parse parameters from URL query string
         const url = new URL(request.url);
         const queryParams = Object.fromEntries(url.searchParams);
         
-        if (queryParams.fnId && queryParams.username) {
-            body = queryParams;
-        } else {
-             // Try standard JSON parse if query params are missing
-            try {
-                 body = await request.json();
-            } catch (e) {
-                // If body parse fails and no query params, we can't proceed
-                 console.error('Body Read/Parse Error:', e);
-            }
-        }
+        // Only use query params, ignore body
+        body = queryParams;
 
         const { username, password, fnId, key, isLocal } = body;
 
@@ -129,3 +119,5 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+
+export { handler as GET, handler as POST };

@@ -114,12 +114,12 @@ export default function Home() {
         <div style={{ marginBottom: '40px' }}>
           <h3 style={h3Style}>
             1. 连接 NAS 服务 (单个)
-            <span style={methodPostStyle}>POST</span>
+            <span style={{...badgeStyle, background: '#dbeafe', color: '#1e40af'}}>GET</span>
           </h3>
           <p><strong>URL</strong>: <code>/api/fn/connect</code></p>
           <p><strong>描述</strong>: 连接到 fnOS NAS 并获取指定 Docker 服务的访问 Token 和 URL。</p>
 
-          <h4>请求参数 (Body)</h4>
+          <h4>请求参数 (URL Query Params)</h4>
           <table style={tableStyle}>
             <thead>
               <tr>
@@ -185,12 +185,16 @@ export default function Home() {
         <div>
           <h3 style={h3Style}>
             2. 获取所有服务列表
-            <span style={methodPostStyle}>POST</span>
+            <span style={{...badgeStyle, background: '#dbeafe', color: '#1e40af'}}>GET</span>
           </h3>
           <p><strong>URL</strong>: <code>/api/fn/services</code></p>
           <p><strong>描述</strong>: 获取 NAS 上运行的所有 Docker 服务列表。</p>
+          <div style={{ padding: '10px', backgroundColor: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '4px', marginBottom: '20px', color: '#0369a1', fontSize: '0.9rem' }}>
+            <strong>提示:</strong> 为确保在 Serverless 环境（如腾讯云 EdgeOne/SCF）下的兼容性，本接口推荐使用 GET 请求，所有参数通过 URL Query String 传递。<br/>
+            例如: <code>/api/fn/services?fnId=xxx&username=xxx...</code>
+          </div>
 
-          <h4>请求参数 (Body)</h4>
+          <h4>请求参数 (URL Query Params)</h4>
           <table style={tableStyle}>
             <thead>
               <tr>
