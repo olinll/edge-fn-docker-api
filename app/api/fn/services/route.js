@@ -9,34 +9,34 @@ export async function POST(request) {
     try {
         let body = {};
         try {
-            // Read body text directly without cloning to avoid stream issues in some environments
-            const bodyText = await request.text();
-            
-            // Debug logs for troubleshooting production issues
-            console.log('[API Debug] Request Method:', request.method);
-            console.log('[API Debug] Content-Type:', request.headers.get('content-type'));
-            console.log('[API Debug] Body Length:', bodyText ? bodyText.length : 0);
-            if (bodyText && bodyText.length < 1000) {
-                console.log('[API Debug] Body Preview:', bodyText);
-            }
+            // Debug: Log all headers
+            const headers = {};
+            request.headers.forEach((value, key) => headers[key] = value);
+            console.log('[API Debug] Headers:', JSON.stringify(headers));
 
-            if (!bodyText) {
-                return NextResponse.json({ 
-                    success: false, 
-                    error: 'Empty request body',
-                    debug: {
-                        method: request.method,
-                        url: request.url,
-                        contentLength: request.headers.get('content-length'),
-                        contentType: request.headers.get('content-type'),
-                        bodyUsed: request.bodyUsed
-                    }
-                }, { status: 400 });
-            }
-            body = JSON.parse(bodyText);
+            // Try reading as JSON directly
+            // request.json() handles the stream reading internally and might be more robust
+            body = await request.json();
+            
+            // Debug logs
+            console.log('[API Debug] Request Method:', request.method);
+            console.log('[API Debug] Body keys:', Object.keys(body));
+            
         } catch (e) {
-            console.error('JSON Parse Error:', e);
-            return NextResponse.json({ success: false, error: 'Invalid JSON body: ' + e.message }, { status: 400 });
+            console.error('Body Read/Parse Error:', e);
+            
+            // Fallback: Check if we can read text if JSON failed (unlikely if stream is consumed, but worth logging)
+            // Or maybe the body was indeed empty/unreadable
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Empty or Invalid request body',
+                debug: {
+                    method: request.method,
+                    url: request.url,
+                    headers: Object.fromEntries(request.headers),
+                    error: e.message
+                }
+            }, { status: 400 });
         }
 
         const { username, password, fnId, key, isLocal } = body;
