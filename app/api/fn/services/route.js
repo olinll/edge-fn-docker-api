@@ -63,7 +63,10 @@ async function handler(request) {
             let resultServices = [];
             let entryToken = null;
 
-            if (isLocal) {
+            // Convert string "true"/"false" to boolean
+            const useLocalIp = isLocal === 'true';
+
+            if (useLocalIp) {
                 // Local: Return local address + service port
                 const localIp = nasData.ipv4 && nasData.ipv4.length > 0 ? nasData.ipv4[0] : nasHost;
                 
