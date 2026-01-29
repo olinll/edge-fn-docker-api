@@ -19,7 +19,10 @@ async function handler(request) {
         // Only use query params, ignore body
         body = queryParams;
 
-        const { username, password, fnId, key, isLocal } = body;
+        const { username, password, fnId, key, isLocal: rawIsLocal } = body;
+        // Ensure isLocal is treated as boolean even if passed as string
+        const isLocal = rawIsLocal === true || rawIsLocal === 'true';
+        console.log(`[API Debug] isLocal Check: raw=${rawIsLocal} (${typeof rawIsLocal}), parsed=${isLocal}`);
 
         // 全局密钥鉴权
         if (key !== GLOBAL_AUTH_KEY) {
@@ -66,7 +69,7 @@ async function handler(request) {
             // Convert string "true"/"false" to boolean
             const useLocalIp = isLocal === 'true';
 
-            if (useLocalIp) {
+            if (!!useLocalIp) {
                 // Local: Return local address + service port
                 const localIp = nasData.ipv4 && nasData.ipv4.length > 0 ? nasData.ipv4[0] : nasHost;
                 
@@ -107,7 +110,10 @@ async function handler(request) {
             };
 
             if (!isLocal && entryToken) {
+                console.log('[API Debug] Adding entryToken to response');
                 response.entryToken = entryToken;
+            } else {
+                console.log(`[API Debug] Skipping entryToken: isLocal=${isLocal}, hasToken=${!!entryToken}`);
             }
 
             return NextResponse.json(response);
